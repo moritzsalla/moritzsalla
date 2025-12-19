@@ -72,16 +72,27 @@ const generateCellular = (width: number, height: number, seed: number, options: 
   return art.trim();
 };
 
+const formatDate = (date: Date): string => {
+  const day = date.getDate();
+  const month = date.toLocaleString('en-GB', { month: 'short' });
+  const year = date.getFullYear();
+  return `${day} ${month} ${year}`;
+};
+
 const main = async (): Promise<void> => {
   const seed = Date.now();
   const art = generateCellular(WIDTH, HEIGHT, seed, {
-    pointCount: 10,
-    metric: 'euclidean',
+    pointCount: 25,
+    metric: 'manhattan',
     invert: false,
   });
 
+  const date = formatDate(new Date());
   const readme = await readFile('README.md', 'utf8');
-  const updated = readme.replace(/```\n[\s\S]*?\n```/, '```\n' + art + '\n```');
+  const updated = readme.replace(
+    /```\n[\s\S]*?\n```\nGenerated: \[.*?\]/,
+    '```\n' + art + '\n```\nGenerated: [' + date + ']'
+  );
   await writeFile('README.md', updated);
 
   console.log('Updated ASCII art with seed:', seed);
