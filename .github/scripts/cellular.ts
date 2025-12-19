@@ -1,10 +1,10 @@
-import { readFile, writeFile } from 'node:fs/promises';
+import { readFile, writeFile } from "node:fs/promises";
 
-const CHARS = [' ', '░', '▒', '▓', '█'] as const;
+const CHARS = [" ", "░", "▒", "▓", "█"] as const;
 const WIDTH = 64;
 const HEIGHT = 3;
 
-type Metric = 'euclidean' | 'manhattan' | 'chebyshev';
+type Metric = "euclidean" | "manhattan" | "chebyshev";
 
 type Point = {
   x: number;
@@ -28,17 +28,22 @@ const mulberry32 = (seed: number): (() => number) => {
 
 const distance = (x1: number, y1: number, x2: number, y2: number, metric: Metric): number => {
   switch (metric) {
-    case 'euclidean':
+    case "euclidean":
       return Math.sqrt((x2 - x1) ** 2 + (y2 - y1) ** 2);
-    case 'manhattan':
+    case "manhattan":
       return Math.abs(x2 - x1) + Math.abs(y2 - y1);
-    case 'chebyshev':
+    case "chebyshev":
       return Math.max(Math.abs(x2 - x1), Math.abs(y2 - y1));
   }
 };
 
-const generateCellular = (width: number, height: number, seed: number, options: Options = {}): string => {
-  const { pointCount = 8, metric = 'euclidean', invert = false } = options;
+const generateCellular = (
+  width: number,
+  height: number,
+  seed: number,
+  options: Options = {}
+): string => {
+  const { pointCount = 8, metric = "euclidean", invert = false } = options;
 
   const random = mulberry32(seed);
   const points: Point[] = Array.from({ length: pointCount }, () => ({
@@ -58,7 +63,7 @@ const generateCellular = (width: number, height: number, seed: number, options: 
     }
   }
 
-  let art = '';
+  let art = "";
   for (let y = 0; y < height; y++) {
     for (let x = 0; x < width; x++) {
       let value = grid[y][x] / maxDist;
@@ -66,7 +71,7 @@ const generateCellular = (width: number, height: number, seed: number, options: 
       const charIndex = Math.min(CHARS.length - 1, Math.floor(value * CHARS.length));
       art += CHARS[charIndex];
     }
-    art += '\n';
+    art += "\n";
   }
 
   return art.trim();
@@ -74,7 +79,7 @@ const generateCellular = (width: number, height: number, seed: number, options: 
 
 const formatDate = (date: Date): string => {
   const day = date.getDate();
-  const month = date.toLocaleString('en-GB', { month: 'short' });
+  const month = date.toLocaleString("en-GB", { month: "short" });
   const year = date.getFullYear();
   return `${day} ${month} ${year}`;
 };
@@ -83,19 +88,19 @@ const main = async (): Promise<void> => {
   const seed = Date.now();
   const art = generateCellular(WIDTH, HEIGHT, seed, {
     pointCount: 25,
-    metric: 'manhattan',
+    metric: "manhattan",
     invert: false,
   });
 
   const date = formatDate(new Date());
-  const readme = await readFile('README.md', 'utf8');
+  const readme = await readFile("README.md", "utf8");
   const updated = readme.replace(
     /```\n[\s\S]*?\n```\nGenerated: \[.*?\]/,
-    '```\n' + art + '\n```\nGenerated: [' + date + ']'
+    "```\n" + art + "\n```\nGenerated: [" + date + "]"
   );
-  await writeFile('README.md', updated);
+  await writeFile("README.md", updated);
 
-  console.log('Updated ASCII art with seed:', seed);
+  console.log("Updated ASCII art with seed:", seed);
   console.log(art);
 };
 
