@@ -88,21 +88,26 @@ const formatDate = (date: Date): string => {
 
 const main = async (): Promise<void> => {
   const seed = Date.now();
+  const metric: Metric = "manhattan";
+  const pointCount = 25;
+
   const art = generateCellular(WIDTH, HEIGHT, seed, {
-    pointCount: 25,
-    metric: "manhattan",
+    pointCount,
+    metric,
     invert: false,
   });
 
   const date = formatDate(new Date());
+  const meta = `Generated: [${date}] • ${metric}/${pointCount}pts • Seed: ${seed}`;
+
   const readme = await readFile("README.md", "utf8");
   const updated = readme.replace(
-    /```\n[\s\S]*?\n```\nGenerated: \[.*?\]/,
-    "```\n" + art + "\n```\nGenerated: [" + date + "]"
+    /```\n[\s\S]*?\n```\n+Generated: \[.*$/m,
+    "```\n" + art + "\n```\n\n" + meta
   );
   await writeFile("README.md", updated);
 
-  console.log("Updated ASCII art with seed:", seed);
+  console.log(meta);
   console.log(art);
 };
 
