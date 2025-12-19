@@ -1,0 +1,11 @@
+{
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "pretty": "prettier --write ."
+  },
+  "devDependencies": {
+    "@types/node": "^22",
+    "prettier": "^3"
+  }
+}
