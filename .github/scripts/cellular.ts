@@ -77,9 +77,11 @@ const generateCellular = (
   return art.trim();
 };
 
+const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+
 const formatDate = (date: Date): string => {
   const day = date.getDate();
-  const month = date.toLocaleString("en-GB", { month: "short" });
+  const month = MONTHS[date.getMonth()];
   const year = date.getFullYear();
   return `${day} ${month} ${year}`;
 };
@@ -104,4 +106,4 @@ const main = async (): Promise<void> => {
   console.log(art);
 };
 
-main();
+main().catch(console.error);
