@@ -6,16 +6,16 @@ const HEIGHT = 3;
 
 type Metric = 'euclidean' | 'manhattan' | 'chebyshev';
 
-interface Point {
+type Point = {
   x: number;
   y: number;
-}
+};
 
-interface Options {
+type Options = {
   pointCount?: number;
   metric?: Metric;
   invert?: boolean;
-}
+};
 
 const mulberry32 = (seed: number): (() => number) => {
   return () => {
