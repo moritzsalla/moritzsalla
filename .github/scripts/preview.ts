@@ -2,12 +2,18 @@ import { writeFile } from "node:fs/promises";
 import {
   calculateActivityParams,
   generateCellular,
+  formatDailyRhythm,
   WIDTH,
   HEIGHT,
   type GitHubStats,
+  type DailyCount,
 } from "./cellular.ts";
 
-const SEED = 42; // fixed seed for reproducible previews
+const SEED = 42;
+
+// helper to create daily breakdown from counts array
+const makeDays = (counts: number[]): DailyCount[] =>
+  counts.map((count, i) => ({ date: `2025-12-${14 + i}`, count }));
 
 type Scenario = {
   name: string;
@@ -16,75 +22,140 @@ type Scenario = {
 };
 
 const SCENARIOS: Scenario[] = [
+  // temporal patterns
+  {
+    name: "Monday Start",
+    description: "burst of energy at week start",
+    stats: {
+      totalContributions: 20,
+      commits: 15,
+      prs: 2,
+      reviews: 0,
+      issues: 0,
+      activeDays: 3,
+      dailyBreakdown: makeDays([12, 5, 3, 0, 0, 0, 0]),
+    },
+  },
+  {
+    name: "Friday Deadline",
+    description: "crunch at end of week",
+    stats: {
+      totalContributions: 25,
+      commits: 18,
+      prs: 3,
+      reviews: 1,
+      issues: 0,
+      activeDays: 4,
+      dailyBreakdown: makeDays([0, 2, 3, 5, 15, 0, 0]),
+    },
+  },
+  {
+    name: "Weekend Warrior",
+    description: "only works on weekends",
+    stats: {
+      totalContributions: 18,
+      commits: 12,
+      prs: 2,
+      reviews: 0,
+      issues: 0,
+      activeDays: 2,
+      dailyBreakdown: makeDays([0, 0, 0, 0, 0, 10, 8]),
+    },
+  },
+  {
+    name: "9-to-5 Steady",
+    description: "consistent weekday work",
+    stats: {
+      totalContributions: 25,
+      commits: 15,
+      prs: 5,
+      reviews: 2,
+      issues: 0,
+      activeDays: 5,
+      dailyBreakdown: makeDays([5, 5, 5, 5, 5, 0, 0]),
+    },
+  },
+  {
+    name: "Mid-week Peak",
+    description: "builds up then tapers",
+    stats: {
+      totalContributions: 30,
+      commits: 20,
+      prs: 4,
+      reviews: 2,
+      issues: 0,
+      activeDays: 5,
+      dailyBreakdown: makeDays([2, 5, 10, 8, 5, 0, 0]),
+    },
+  },
+  {
+    name: "Scattered",
+    description: "sporadic bursts",
+    stats: {
+      totalContributions: 15,
+      commits: 10,
+      prs: 2,
+      reviews: 0,
+      issues: 0,
+      activeDays: 3,
+      dailyBreakdown: makeDays([8, 0, 0, 5, 0, 0, 2]),
+    },
+  },
   {
     name: "Quiet Week",
-    description: "minimal activity, single day",
-    stats: { totalContributions: 1, commits: 1, prs: 0, reviews: 0, issues: 0, activeDays: 1 },
-  },
-  {
-    name: "Light Week",
-    description: "casual contributions",
-    stats: { totalContributions: 5, commits: 2, prs: 1, reviews: 0, issues: 0, activeDays: 3 },
-  },
-  {
-    name: "Normal Week",
-    description: "steady work rhythm",
-    stats: { totalContributions: 15, commits: 8, prs: 2, reviews: 1, issues: 0, activeDays: 5 },
-  },
-  {
-    name: "Busy Week",
-    description: "high output",
-    stats: { totalContributions: 35, commits: 20, prs: 5, reviews: 3, issues: 2, activeDays: 6 },
+    description: "minimal activity",
+    stats: {
+      totalContributions: 2,
+      commits: 2,
+      prs: 0,
+      reviews: 0,
+      issues: 0,
+      activeDays: 1,
+      dailyBreakdown: makeDays([0, 0, 0, 2, 0, 0, 0]),
+    },
   },
   {
     name: "Hectic Week",
-    description: "crunch mode",
-    stats: { totalContributions: 60, commits: 40, prs: 10, reviews: 5, issues: 3, activeDays: 7 },
-  },
-  {
-    name: "Reviewer Week",
-    description: "more consuming than creating (inverted)",
-    stats: { totalContributions: 20, commits: 2, prs: 0, reviews: 15, issues: 1, activeDays: 5 },
-  },
-  {
-    name: "Sporadic Burst",
-    description: "intense but inconsistent (angular)",
-    stats: { totalContributions: 25, commits: 15, prs: 3, reviews: 2, issues: 1, activeDays: 2 },
+    description: "crunch all week",
+    stats: {
+      totalContributions: 60,
+      commits: 40,
+      prs: 10,
+      reviews: 5,
+      issues: 3,
+      activeDays: 7,
+      dailyBreakdown: makeDays([8, 10, 12, 8, 10, 6, 6]),
+    },
   },
 ];
 
-const formatTimestamp = (): string => {
-  const now = new Date();
-  const pad = (n: number) => n.toString().padStart(2, "0");
-  return `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}-${pad(now.getHours())}${pad(now.getMinutes())}${pad(now.getSeconds())}`;
-};
-
 const main = async (): Promise<void> => {
-  const timestamp = formatTimestamp();
-
-  let output = `# Activity Visualization Preview\n`;
-  output += `Generated: ${timestamp}\n\n`;
+  let output = `# Temporal Visualization Preview\n\n`;
+  output += `Each pattern shows weekly rhythm: left = start of week, right = end of week\n\n`;
 
   for (const scenario of SCENARIOS) {
     const params = calculateActivityParams(scenario.stats);
+    const dailyWeights = scenario.stats.dailyBreakdown.map((d) => d.count);
+    const rhythm = formatDailyRhythm(scenario.stats.dailyBreakdown);
+
     const art = generateCellular(WIDTH, HEIGHT, SEED, {
       pointCount: params.pointCount,
       metric: params.metric,
       invert: params.invert,
+      dailyWeights,
     });
 
     output += `---\n\n`;
     output += `## ${scenario.name}\n`;
     output += `> ${scenario.description}\n\n`;
-    output += `**Stats:** ${scenario.stats.commits} commits, ${scenario.stats.prs} PRs, ${scenario.stats.reviews} reviews, ${scenario.stats.activeDays}/7 days\n\n`;
+    output += `**Rhythm:** \`${rhythm}\` (${scenario.stats.dailyBreakdown.map((d) => d.count).join("-")})\n\n`;
     output += `**Params:** ${params.metric} / ${params.pointCount} pts${params.invert ? " / inverted" : ""}\n\n`;
     output += "```\n" + art + "\n```\n\n";
   }
 
-  const filepath = `preview-${timestamp}.md`;
-  await writeFile(filepath, output);
+  await writeFile("preview.md", output);
 
-  console.log(`Written: ${filepath}`);
+  console.log("Written: preview.md");
 };
 
 main().catch(console.error);

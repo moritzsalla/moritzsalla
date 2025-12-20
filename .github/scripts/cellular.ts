@@ -16,7 +16,10 @@ export type Options = {
   pointCount?: number;
   metric?: Metric;
   invert?: boolean;
+  dailyWeights?: number[]; // 7 values (Mon-Sun), higher = more points in that region
 };
+
+export type DailyCount = { date: string; count: number };
 
 export type GitHubStats = {
   totalContributions: number;
@@ -25,6 +28,7 @@ export type GitHubStats = {
   reviews: number;
   issues: number;
   activeDays: number;
+  dailyBreakdown: DailyCount[];
 };
 
 export type ActivityParams = {
@@ -72,10 +76,18 @@ const fetchGitHubStats = (username: string): GitHubStats | null => {
     const allDays = contrib.contributionCalendar.weeks.flatMap(
       (w: { contributionDays: { contributionCount: number; date: string }[] }) => w.contributionDays
     );
-    const recentDays = allDays.filter((d: { date: string }) => new Date(d.date) >= weekAgo);
+    const recentDays = allDays
+      .filter((d: { date: string }) => new Date(d.date) >= weekAgo)
+      .sort((a: { date: string }, b: { date: string }) => a.date.localeCompare(b.date));
+
     const activeDays = recentDays.filter(
       (d: { contributionCount: number }) => d.contributionCount > 0
     ).length;
+
+    const dailyBreakdown = recentDays.map((d: { date: string; contributionCount: number }) => ({
+      date: d.date,
+      count: d.contributionCount,
+    }));
 
     return {
       totalContributions: contrib.contributionCalendar.totalContributions,
@@ -84,6 +96,7 @@ const fetchGitHubStats = (username: string): GitHubStats | null => {
       reviews: contrib.totalPullRequestReviewContributions,
       issues: contrib.totalIssueContributions,
       activeDays,
+      dailyBreakdown,
     };
   } catch {
     console.error("Failed to fetch GitHub stats, using defaults");
@@ -135,15 +148,60 @@ const distance = (x1: number, y1: number, x2: number, y2: number, metric: Metric
   }
 };
 
+// temporal mode: direct density rendering per day
+const generateTemporal = (
+  width: number,
+  height: number,
+  seed: number,
+  dailyWeights: number[]
+): string => {
+  const random = mulberry32(seed);
+  const dayWidth = width / dailyWeights.length;
+  const maxWeight = Math.max(...dailyWeights, 1);
+
+  let art = "";
+  for (let y = 0; y < height; y++) {
+    for (let x = 0; x < width; x++) {
+      const day = Math.floor(x / dayWidth);
+      const activity = dailyWeights[day] / maxWeight; // 0-1
+
+      // base noise + activity-scaled density
+      const noise = random();
+      const threshold = 1 - activity; // higher activity = lower threshold = more chars
+
+      if (noise > threshold + 0.3) {
+        art += CHARS[4]; // █
+      } else if (noise > threshold + 0.15) {
+        art += CHARS[3]; // ▓
+      } else if (noise > threshold) {
+        art += CHARS[2]; // ▒
+      } else if (noise > threshold - 0.1 && activity > 0.1) {
+        art += CHARS[1]; // ░
+      } else {
+        art += CHARS[0]; // space
+      }
+    }
+    art += "\n";
+  }
+
+  return art.trim();
+};
+
 export const generateCellular = (
   width: number,
   height: number,
   seed: number,
   options: Options = {}
 ): string => {
-  const { pointCount = 8, metric = "euclidean", invert = false } = options;
+  const { pointCount = 8, metric = "euclidean", invert = false, dailyWeights } = options;
+
+  // use temporal mode if daily weights provided
+  if (dailyWeights) {
+    return generateTemporal(width, height, seed, dailyWeights);
+  }
 
   const random = mulberry32(seed);
+
   const points: Point[] = Array.from({ length: pointCount }, () => ({
     x: random() * width,
     y: random() * height,
@@ -184,18 +242,31 @@ export const formatDate = (date: Date): string => {
   return `${day} ${month} ${year}`;
 };
 
+// map count to density character for rhythm display
+const countToChar = (count: number): string => {
+  if (count === 0) return "·";
+  if (count <= 2) return "░";
+  if (count <= 5) return "▒";
+  if (count <= 10) return "▓";
+  return "█";
+};
+
+export const formatDailyRhythm = (dailyBreakdown: DailyCount[]): string => {
+  // pad to 7 days if needed
+  const counts = dailyBreakdown.map((d) => d.count);
+  while (counts.length < 7) counts.push(0);
+  return counts
+    .slice(0, 7)
+    .map((c) => countToChar(c))
+    .join("");
+};
+
 export const formatActivityMeta = (params: ActivityParams, date: string): string => {
   const { pointCount, metric, stats } = params;
-  const activityParts: string[] = [];
-  if (stats.commits) activityParts.push(`${stats.commits} commit${stats.commits !== 1 ? "s" : ""}`);
-  if (stats.prs) activityParts.push(`${stats.prs} PR${stats.prs !== 1 ? "s" : ""}`);
-  if (stats.reviews) activityParts.push(`${stats.reviews} review${stats.reviews !== 1 ? "s" : ""}`);
-  if (stats.issues) activityParts.push(`${stats.issues} issue${stats.issues !== 1 ? "s" : ""}`);
 
-  const activitySummary = activityParts.length > 0 ? activityParts.join(", ") : "quiet week";
-  const daysActive = `${stats.activeDays}/7 days`;
+  const rhythm = formatDailyRhythm(stats.dailyBreakdown);
 
-  return `Generated: [${date}] • ${activitySummary} • ${daysActive} • ${metric}/${pointCount}pts`;
+  return `Generated: [${date}] • ${rhythm} • ${metric}/${pointCount}pts`;
 };
 
 const main = async (): Promise<void> => {
@@ -214,10 +285,13 @@ const main = async (): Promise<void> => {
 
   console.log("Activity params:", params);
 
+  const dailyWeights = stats.dailyBreakdown.map((d) => d.count);
+
   const art = generateCellular(WIDTH, HEIGHT, seed, {
     pointCount: params.pointCount,
     metric: params.metric,
     invert: params.invert,
+    dailyWeights,
   });
 
   const date = formatDate(new Date());
