@@ -2,23 +2,23 @@ import { readFile, writeFile } from "node:fs/promises";
 import { execSync } from "node:child_process";
 
 const CHARS = [" ", "░", "▒", "▓", "█"] as const;
-const WIDTH = 64;
-const HEIGHT = 3;
+export const WIDTH = 64;
+export const HEIGHT = 3;
 
-type Metric = "euclidean" | "manhattan" | "chebyshev";
+export type Metric = "euclidean" | "manhattan" | "chebyshev";
 
 type Point = {
   x: number;
   y: number;
 };
 
-type Options = {
+export type Options = {
   pointCount?: number;
   metric?: Metric;
   invert?: boolean;
 };
 
-type GitHubStats = {
+export type GitHubStats = {
   totalContributions: number;
   commits: number;
   prs: number;
@@ -27,7 +27,7 @@ type GitHubStats = {
   activeDays: number;
 };
 
-type ActivityParams = {
+export type ActivityParams = {
   pointCount: number;
   metric: Metric;
   invert: boolean;
@@ -91,7 +91,7 @@ const fetchGitHubStats = (username: string): GitHubStats | null => {
   }
 };
 
-const calculateActivityParams = (stats: GitHubStats): ActivityParams => {
+export const calculateActivityParams = (stats: GitHubStats): ActivityParams => {
   // PRs weigh more since they represent larger chunks of work
   const activityScore =
     stats.commits * 1.0 + stats.prs * 3 + stats.reviews * 1.5 + stats.issues * 2;
@@ -135,7 +135,7 @@ const distance = (x1: number, y1: number, x2: number, y2: number, metric: Metric
   }
 };
 
-const generateCellular = (
+export const generateCellular = (
   width: number,
   height: number,
   seed: number,
@@ -177,14 +177,14 @@ const generateCellular = (
 
 const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 
-const formatDate = (date: Date): string => {
+export const formatDate = (date: Date): string => {
   const day = date.getDate();
   const month = MONTHS[date.getMonth()];
   const year = date.getFullYear();
   return `${day} ${month} ${year}`;
 };
 
-const formatActivityMeta = (params: ActivityParams, date: string): string => {
+export const formatActivityMeta = (params: ActivityParams, date: string): string => {
   const { pointCount, metric, stats } = params;
   const activityParts: string[] = [];
   if (stats.commits) activityParts.push(`${stats.commits} commit${stats.commits !== 1 ? "s" : ""}`);
@@ -234,4 +234,8 @@ const main = async (): Promise<void> => {
   console.log(art);
 };
 
-main().catch(console.error);
+// only run when executed directly, not when imported
+const isMainModule = import.meta.url === `file://${process.argv[1]}`;
+if (isMainModule) {
+  main().catch(console.error);
+}
