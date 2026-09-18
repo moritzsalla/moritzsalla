@@ -239,3 +239,138 @@ Amsterdam, one lunar month. Left edge is local midnight, right edge the next.
                                                         ░░░░░░░░
 ▒░░░░░░░░░             ░░░░▒▒▒▓▓▓▓▓▓▓▓▓▓▓▓▓▒▒▒░░░░░░░▒▒▒▒▒▒▒▒▒▒▒
 ```
+
+---
+
+## Weather as the arc's character
+
+Weather does not get its own rows — it acts on the arc. That is what it
+does in life: a clear day has a hard directional peak, thick low cloud
+turns the light diffuse until the peak flattens into a band, and rain and
+wind break up the edge. No symbols, same language as the sun and moon.
+
+The same Amsterdam day, 20 October, under each condition Open-Meteo
+reports.
+
+**clear**
+
+```
+                             ░░▒▓▓█████▓▓▒░                     
+                          ░▒▓███████████████▓▒░                 
+░░░                    ░▒▓█████████████████████▓▒░░░░░░░░░░░░░░░
+```
+
+**cloudy**
+
+```
+                              ░░▒▒▒▒▒▒▒▒░░░                     
+                         ░░▒▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▒░░                
+░░░                    ▒▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓░░░░░░░░░░░░░░░
+```
+
+**overcast**
+
+```
+                                 ░░░░░░░                        
+                       ░░░▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒░░               
+░░░                    ▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒░░░░░░░░░░░░░░░
+```
+
+**fog**
+
+```
+                                                                
+                       ░░░▒▒▒░▒░▒▒▒▒▒░▒▒▒▒░░▒▒▒░▒               
+░░░                    ▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒░░░░░░░░░░░░░░░
+```
+
+**drizzle**
+
+```
+                                   ░  ░                         
+                       ░░░░░▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒░░░               
+░░░                    ▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒░░░░░░░░░░░░░░░
+```
+
+**rain**
+
+```
+                                                                
+                       ░░░░░░░░░░░░▒░░▒░░░░░░░░░░               
+░░░                    ▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒░░░░░░░░░░░░░░░
+```
+
+**showers**
+
+```
+                                  ░░  ░░                        
+                          ░░░░▒▒▒▒▒▒▒▒▒▒▒▒░░░░░ ░               
+░░░                    ▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒░░░░░░░░░░░░░░░
+```
+
+**snow**
+
+```
+                                                                
+                       ░▒░▒▒▒▒▒▒▒▒▒▒▒▒▓▒▒▒▒▒▒▒▒░▒               
+░░░                    ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓░░░░░░░░░░░░░░░
+```
+
+**storm**
+
+```
+                                                                
+                       ░░░░░░░░░░░░░░░░░░░░░░░░░░               
+░░░                    ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
+```
+
+### Cloud height, not just cloud amount
+
+Open-Meteo splits cover into low, mid and high. Cirrus thins the light
+without killing the shadow; stratus sitting on the city does.
+
+**high cirrus only, 80%**
+
+```
+                             ░░░▒▒▓▓▓▓▓▒▒░░                     
+                          ░▒▓██████████████▓▓▒░                 
+░░░                    ░▒▓█████████████████████▓▒░░░░░░░░░░░░░░░
+```
+
+**mid altocumulus, 80%**
+
+```
+                              ░░░░░▒▒░░░░░░                     
+                        ░░░▒▒▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▒▒░░                
+░░░                    ▒▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓░░░░░░░░░░░░░░░
+```
+
+**low stratus, 80%**
+
+```
+                              ░░░░░░░░░░░░░                     
+                       ░░░░▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒░░░░               
+░░░                    ▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒░░░░░░░░░░░░░░░
+```
+
+### WMO code mapping
+
+```
+ 0 -> clear
+ 1 -> cloudy
+ 2 -> cloudy
+ 3 -> overcast
+45 -> fog
+48 -> fog
+51 -> drizzle
+55 -> drizzle
+61 -> rain
+65 -> rain
+71 -> snow
+75 -> snow
+80 -> showers
+82 -> showers
+85 -> snow
+95 -> storm
+99 -> storm
+```

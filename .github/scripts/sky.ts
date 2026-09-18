@@ -6,6 +6,7 @@
 import { altitude as sunAltitude, utcOffsetHours, type Place } from "./daylight.ts";
 import { altitude as moonAltitude, illumination } from "./moon.ts";
 import type { Strip } from "./strip.ts";
+import type { Character } from "./conditions.ts";
 
 /** below this the moon gives no usable light, so it draws nothing at all */
 const NEW_MOON_FLOOR = 0.08;
@@ -19,8 +20,23 @@ const NEW_MOON_FLOOR = 0.08;
 const MOON_CEILING = 0.55;
 
 export type SkyOptions = {
-  /** 0..1 per sample, dims the daylit part of the arc */
-  cloud?: number[];
+  /** how the weather acts on the daylit arc; night is left alone */
+  weather?: Character;
+  /**
+   * "absolute" measures the arc against a true overhead sun, so latitude and
+   * season read as height — but at 52°N that caps the arc at two thirds of
+   * the strip, and in winter at a sixth, leaving nothing for weather to act
+   * on. "daily" scales each day to its own peak instead. Season still reads,
+   * because it is the arc's *width* that tracks day length, which frees the
+   * vertical axis for the sky.
+   */
+  normalise?: "absolute" | "daily";
+};
+
+/** deterministic per-column noise, so a given day always renders the same */
+const jitter = (seed: number): number => {
+  const x = Math.sin(seed * 127.1) * 43_758.545;
+  return x - Math.floor(x);
 };
 
 export const skyStrip = (
@@ -31,6 +47,22 @@ export const skyStrip = (
 ): Strip => {
   const offset = utcOffsetHours(date, place.timeZone);
   const lit = illumination(date);
+
+  const weather = options.weather;
+
+  // the mean height of the daylit arc, which is what fully diffuse light
+  // collapses onto: bright, but with nowhere in particular to point
+  const daylit: number[] = [];
+  for (let i = 0; i < samples; i++) {
+    const sun = sunAltitude(date, place, (i / (samples - 1)) * 24 - offset);
+    if (sun > 0) daylit.push(sun / 90);
+  }
+
+  const peak = daylit.length > 0 ? Math.max(...daylit) : 1;
+  const scale = options.normalise === "daily" && peak > 0 ? 1 / peak : 1;
+
+  const diffuseLevel =
+    daylit.length > 0 ? (daylit.reduce((a, b) => a + b, 0) / daylit.length) * scale : 0;
 
   const values: number[] = [];
   const shade: number[] = [];
@@ -45,8 +77,17 @@ export const skyStrip = (
     const sun = sunAltitude(date, place, utcHour);
 
     if (sun > 0) {
-      values.push(sun / 90);
-      shade.push(options.cloud ? 1 - 0.8 * (options.cloud[i % options.cloud.length] ?? 0) : 1);
+      let height = (sun / 90) * scale;
+
+      if (weather) {
+        // thick low cloud pulls the arc toward a flat diffuse band
+        height = height + (diffuseLevel - height) * weather.diffuse;
+        // rain and wind chew at its edge
+        height *= 1 - weather.agitate * 0.45 * jitter(i + 1);
+      }
+
+      values.push(Math.max(0, height));
+      shade.push(weather ? 1 - weather.dim : 1);
       continue;
     }
 

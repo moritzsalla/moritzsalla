@@ -7,6 +7,7 @@ import { renderStrip } from "./strip.ts";
 import { arc, dayLength, type Place } from "./daylight.ts";
 import { illumination } from "./moon.ts";
 import { skyStrip } from "./sky.ts";
+import { characterOf, conditionOf, type Condition } from "./conditions.ts";
 import { toForecast, type OpenMeteoResponse } from "./weather.ts";
 import { WIDTH, HEIGHT } from "./cellular.ts";
 
@@ -239,6 +240,81 @@ const main = async (): Promise<void> => {
       ""
     );
   }
+
+  lines.push(
+    "---",
+    "",
+    "## Weather as the arc's character",
+    "",
+    "Weather does not get its own rows — it acts on the arc. That is what it",
+    "does in life: a clear day has a hard directional peak, thick low cloud",
+    "turns the light diffuse until the peak flattens into a band, and rain and",
+    "wind break up the edge. No symbols, same language as the sun and moon.",
+    "",
+    "The same Amsterdam day, 20 October, under each condition Open-Meteo",
+    "reports.",
+    ""
+  );
+
+  const day = new Date("2026-10-20T12:00:00Z");
+  const CONDITIONS: Condition[] = [
+    "clear",
+    "cloudy",
+    "overcast",
+    "fog",
+    "drizzle",
+    "rain",
+    "showers",
+    "snow",
+    "storm",
+  ];
+
+  for (const condition of CONDITIONS) {
+    const art = renderStrip(
+      skyStrip(day, AMSTERDAM, 200, { weather: characterOf(condition), normalise: "daily" }),
+      WIDTH,
+      HEIGHT
+    );
+    lines.push(`**${condition}**`, "", fence(art), "");
+  }
+
+  lines.push(
+    "### Cloud height, not just cloud amount",
+    "",
+    "Open-Meteo splits cover into low, mid and high. Cirrus thins the light",
+    "without killing the shadow; stratus sitting on the city does.",
+    ""
+  );
+
+  for (const [label, character] of [
+    ["high cirrus only, 80%", { diffuse: 0.16, agitate: 0, dim: 0.12 }],
+    ["mid altocumulus, 80%", { diffuse: 0.4, agitate: 0, dim: 0.32 }],
+    ["low stratus, 80%", { diffuse: 0.72, agitate: 0, dim: 0.52 }],
+  ] as const) {
+    lines.push(
+      `**${label}**`,
+      "",
+      fence(
+        renderStrip(
+          skyStrip(day, AMSTERDAM, 200, { weather: character, normalise: "daily" }),
+          WIDTH,
+          HEIGHT
+        )
+      ),
+      ""
+    );
+  }
+
+  // the code mapping should be exhaustive over what the API actually sends
+  const codes = [0, 1, 2, 3, 45, 48, 51, 55, 61, 65, 71, 75, 80, 82, 85, 95, 99];
+  lines.push(
+    "### WMO code mapping",
+    "",
+    "```",
+    codes.map((c) => `${String(c).padStart(2)} -> ${conditionOf(c)}`).join("\n"),
+    "```",
+    ""
+  );
 
   await writeFile("explorations/spike-daylight-weather.md", lines.join("\n"));
   console.log("wrote explorations/spike-daylight-weather.md");
