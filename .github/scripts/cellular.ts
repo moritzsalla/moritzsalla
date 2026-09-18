@@ -98,8 +98,12 @@ const fetchGitHubStats = (username: string): GitHubStats | null => {
       activeDays,
       dailyBreakdown,
     };
-  } catch {
-    console.error("Failed to fetch GitHub stats, using defaults");
+  } catch (error) {
+    const detail = error instanceof Error ? error.message : String(error);
+    console.error(`Failed to fetch GitHub stats: ${detail}`);
+    if (!process.env.GH_TOKEN && !process.env.GITHUB_TOKEN) {
+      console.error("Hint: GH_TOKEN is not set, so `gh api` cannot authenticate.");
+    }
     return null;
   }
 };
@@ -298,10 +302,16 @@ const main = async (): Promise<void> => {
   const meta = formatActivityMeta(params, date);
 
   const readme = await readFile("README.md", "utf8");
-  const updated = readme.replace(
-    /```\n[\s\S]*?\n```\n+Generated: \[.*$/m,
-    "```\n" + art + "\n```\n\n" + meta
-  );
+
+  // the trailing meta line is optional: it may have been edited out by hand
+  const blockPattern = /```\n[\s\S]*?\n```(?:\n+Generated: \[[^\n]*)?/;
+
+  if (!blockPattern.test(readme)) {
+    console.error("Aborting: no fenced art block found in README.md");
+    process.exit(1);
+  }
+
+  const updated = readme.replace(blockPattern, () => "```\n" + art + "\n```\n\n" + meta);
   await writeFile("README.md", updated);
 
   console.log(meta);
