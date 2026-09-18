@@ -5,14 +5,27 @@
 import { writeFile } from "node:fs/promises";
 import { renderStrip } from "./strip.ts";
 import { arc, dayLength, type Place } from "./daylight.ts";
+import { illumination } from "./moon.ts";
+import { skyStrip } from "./sky.ts";
 import { toForecast, type OpenMeteoResponse } from "./weather.ts";
 import { WIDTH, HEIGHT } from "./cellular.ts";
 
+const AMSTERDAM: Place = {
+  latitude: 52.37,
+  longitude: 4.9,
+  label: "Amsterdam",
+  timeZone: "Europe/Amsterdam",
+};
+
 const PLACES: Place[] = [
-  { latitude: 52.52, longitude: 13.41, label: "Berlin, 52.5°N" },
-  { latitude: 51.51, longitude: -0.13, label: "London, 51.5°N" },
-  { latitude: 38.72, longitude: -9.14, label: "Lisbon, 38.7°N" },
-  { latitude: 64.15, longitude: -21.94, label: "Reykjavik, 64.1°N" },
+  AMSTERDAM,
+  { latitude: 38.72, longitude: -9.14, label: "Lisbon, 38.7°N", timeZone: "Europe/Lisbon" },
+  {
+    latitude: 64.15,
+    longitude: -21.94,
+    label: "Reykjavik, 64.1°N",
+    timeZone: "Atlantic/Reykjavik",
+  },
 ];
 
 const DATES = [
@@ -148,7 +161,7 @@ const main = async (): Promise<void> => {
     ""
   );
 
-  const berlin = PLACES[0];
+  const berlin = AMSTERDAM;
   const today = new Date("2026-09-19T12:00:00Z");
 
   lines.push(
@@ -193,6 +206,39 @@ const main = async (): Promise<void> => {
     ),
     ""
   );
+
+  lines.push(
+    "---",
+    "",
+    "## Night, without drawing a moon",
+    "",
+    "The strip already covers a full local day, and most of it is empty. Rather",
+    "than put a symbol in that space, the moon draws its own arc in the same",
+    "language as the sun, dimmed to its illuminated fraction. A full moon that",
+    "rides high is a soft mound; a new moon is nothing at all. No glyph, no",
+    "stars — night is simply a fainter version of the same shape.",
+    "",
+    `Amsterdam, one lunar month. Left edge is local midnight, right edge the next.`,
+    ""
+  );
+
+  for (const iso of [
+    "2026-09-26",
+    "2026-09-30",
+    "2026-10-04",
+    "2026-10-08",
+    "2026-10-16",
+    "2026-10-22",
+  ]) {
+    const date = new Date(`${iso}T12:00:00Z`);
+    const lit = illumination(new Date(`${iso}T22:00:00Z`));
+    lines.push(
+      `**${iso}** — ${(lit * 100).toFixed(0)}% lit, ${dayLength(date, AMSTERDAM).toFixed(1)}h of daylight`,
+      "",
+      fence(renderStrip(skyStrip(date, AMSTERDAM, 200), WIDTH, HEIGHT)),
+      ""
+    );
+  }
 
   await writeFile("explorations/spike-daylight-weather.md", lines.join("\n"));
   console.log("wrote explorations/spike-daylight-weather.md");

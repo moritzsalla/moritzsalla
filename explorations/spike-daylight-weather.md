@@ -14,61 +14,35 @@ The sun's arc across one day. 64 columns = 24 hours, height = altitude,
 normalised against a true overhead sun so latitude and season both read.
 No API and no key — this is computed from the date and a latitude.
 
-### Berlin, 52.5°N
+### Amsterdam
 
-**Midwinter** — 7.4h of daylight
-
-```
-                                                                
-                                                                
-                    ░░░░░▒▒▒▒▒▒▒▒▒░░░░░                         
-```
-
-**Spring equinox** — 11.8h of daylight
-
-```
-                                                                
-                        ░░░░░░░░░░░                             
-              ░░░▒▒▒▓▓███████████████▓▓▓▒▒░░░                   
-```
-
-**Midsummer** — 16.6h of daylight
-
-```
-                            ░░░                                 
-                 ░░░░▒▒▓▓▓████████▓▓▒▒▒░░░                      
-        ░░░░▒▒▓▓███████████████████████████▓▓▒▒▒░░░             
-```
-
-### London, 51.5°N
-
-**Midwinter** — 7.6h of daylight
+**Midwinter** — 7.7h of daylight
 
 ```
                                                                 
                                                                 
-                      ░░░░░▒▒▒▒▒▒▒▒▒▒░░░░░                      
+                        ░░░░░▒▒▒▒▒▒▒▒▒░░░░░░                    
 ```
 
-**Spring equinox** — 11.8h of daylight
+**Spring equinox** — 12.0h of daylight
 
 ```
                                                                 
-                          ░░░░░░░░░░░░                          
-                ░░░░▒▒▓▓████████████████▓▓▒▒░░░░                
+                            ░░░░░░░░░░░░                        
+                  ░░░▒▒▒▓▓███████████████▓▓▓▒▒░░░░              
 ```
 
-**Midsummer** — 16.4h of daylight
+**Midsummer** — 16.8h of daylight
 
 ```
-                              ░░░░                              
-                    ░░░▒▒▓▓▓████████▓▓▓▒▒░░░                    
-          ░░░░▒▒▓▓▓██████████████████████████▓▓▓▒▒░░░░          
+                                   ░░░                          
+                        ░░░▒▒▒▓▓████████▓▓▓▒▒▒░░░               
+              ░░░░▒▒▒▓▓███████████████████████████▓▓▒▒░░░░      
 ```
 
 ### Lisbon, 38.7°N
 
-**Midwinter** — 9.3h of daylight
+**Midwinter** — 9.5h of daylight
 
 ```
                                                                 
@@ -76,7 +50,7 @@ No API and no key — this is computed from the date and a latitude.
                      ░░░░▒▒▓▓▓▓█████▓▓▓▓▒▒▒░░░                  
 ```
 
-**Spring equinox** — 11.9h of daylight
+**Spring equinox** — 12.0h of daylight
 
 ```
                                                                 
@@ -84,17 +58,17 @@ No API and no key — this is computed from the date and a latitude.
                   ░░░▒▓▓███████████████████▓▓▒▒░░               
 ```
 
-**Midsummer** — 14.7h of daylight
+**Midsummer** — 14.9h of daylight
 
 ```
-                            ░░░▒▒▒▒▒░░░                         
-                     ░░░▒▒▓█████████████▓▓▒░░░                  
-              ░░░▒▒▓▓██████████████████████████▓▒▒░░░           
+                               ░░░▒▒▒▒░░░░                      
+                        ░░░▒▓▓████████████▓▓▒▒░░                
+                 ░░░▒▓▓██████████████████████████▓▓▒▒░░░        
 ```
 
 ### Reykjavik, 64.1°N
 
-**Midwinter** — 3.5h of daylight
+**Midwinter** — 4.1h of daylight
 
 ```
                                                                 
@@ -102,7 +76,7 @@ No API and no key — this is computed from the date and a latitude.
                                ░░░░░░░░░░                       
 ```
 
-**Spring equinox** — 11.8h of daylight
+**Spring equinox** — 12.0h of daylight
 
 ```
                                                                 
@@ -110,7 +84,7 @@ No API and no key — this is computed from the date and a latitude.
                     ░░░░░▒▒▒▒▓▓▓▓▓▓▓▓▓▓▓▓▓▓▒▒▒▒░░░░             
 ```
 
-**Midsummer** — 20.5h of daylight
+**Midsummer** — 21.1h of daylight
 
 ```
                                                                 
@@ -182,26 +156,86 @@ the shape — the sun's arc for the day — and cloud cover drives the shade,
 so the strip shows the sun's path and whether you would actually see it.
 One variable per channel, which is what the grid can carry.
 
-**Berlin, 52.5°N, clear day**
+**Amsterdam, clear day**
 
 ```
                                                                 
-                       ░░░░░░░░░░░░░                            
-             ░░░░▒▒▓▓▓███████████████▓▓▓▒▒░░░░                  
+                              ░░░░░░░░░░░░░                     
+                    ░░░░▒▒▓▓▓███████████████▓▓▓▒▒░░░            
 ```
 
-**Berlin, 52.5°N, broken cloud**
-
-```
-                                                                
-                       ░░░░░░░░░░░░░                            
-             ░░░░░░░░░░░░░░░░░░░░▒▒▒▒▒░░░░░░░░                  
-```
-
-**Berlin, 52.5°N, overcast and wet**
+**Amsterdam, broken cloud**
 
 ```
                                                                 
-                       ░░░░░░░░░░░░░                            
-             ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░                  
+                              ░░░░░░░░░░░░░                     
+                    ░░░░░░░░░░░░░▒▒▒▒▒▒▒▒▒▒▒▒▒▒░░░░░            
+```
+
+**Amsterdam, overcast and wet**
+
+```
+                                                                
+                              ░░░░░░░░░░░░░                     
+                    ░░░░░░░░░░░░░░░░░░░░░░░▒▒▒▒░░░░░            
+```
+
+---
+
+## Night, without drawing a moon
+
+The strip already covers a full local day, and most of it is empty. Rather
+than put a symbol in that space, the moon draws its own arc in the same
+language as the sun, dimmed to its illuminated fraction. A full moon that
+rides high is a soft mound; a new moon is nothing at all. No glyph, no
+stars — night is simply a fainter version of the same shape.
+
+Amsterdam, one lunar month. Left edge is local midnight, right edge the next.
+
+**2026-09-26** — 100% lit, 11.8h of daylight
+
+```
+                                                                
+░░░░░░░░░                      ░░░░░░░░░░░                  ░░░░
+▒▒▒▒▒▒▒▒▒▒▒▒▒░░░░░░  ░░░▒▒▒▓▓██████████████▓▓▓▒▒░░░░░░░░░▒▒▒▒▒▒▒
+```
+
+**2026-09-30** — 79% lit, 11.5h of daylight
+
+```
+           ░                                                    
+░░░░░░░▒▒▒▒▒▒▒▒▒░░░░░           ░░░░░░░░░                       
+▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒░░░▒▒▓▓▓█████████████▓▓▓▒▒░░░   ░░░░░░░░▒▒
+```
+
+**2026-10-04** — 35% lit, 11.3h of daylight
+
+```
+                   ░░░                                          
+         ░░░░░░░░░░░░░           ░░░░░░░                        
+░░░░░░░░░░░░░░░░░░░░░░░░░▒▒▒▓▓▓███████████▓▓▓▒▒▒░░░             
+```
+
+**2026-10-08** — 3% lit, 11.0h of daylight
+
+```
+                                                                
+                                  ░░░░                          
+                      ░░░░▒▒▓▓▓▓█████████▓▓▓▓▒▒░░░░             
+```
+
+**2026-10-16** — 34% lit, 10.4h of daylight
+
+```
+                                                                
+                                                                
+                       ░░░▒▒▒▓▓▓▓▓█████▓▓▓▓▒▒▒░░░░░░░░░░░       
+```
+
+**2026-10-22** — 88% lit, 10.1h of daylight
+
+```
+                                                                
+                                                        ░░░░░░░░
+▒░░░░░░░░░             ░░░░▒▒▒▓▓▓▓▓▓▓▓▓▓▓▓▓▒▒▒░░░░░░░▒▒▒▒▒▒▒▒▒▒▒
 ```
