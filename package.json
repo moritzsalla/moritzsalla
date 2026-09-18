@@ -2,10 +2,13 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "pretty": "prettier --write ."
+    "pretty": "prettier --write .",
+    "typecheck": "tsc --noEmit",
+    "format:check": "prettier --check ."
   },
   "devDependencies": {
-    "@types/node": "^22",
-    "prettier": "^3"
+    "@types/node": "^24",
+    "prettier": "^3",
+    "typescript": "^5"
   }
 }
