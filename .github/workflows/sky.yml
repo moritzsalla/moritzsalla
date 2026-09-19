@@ -19,9 +19,12 @@ jobs:
         with:
           python-version: "3.12"
 
-      # the parser depends on these field names and they cannot be checked
-      # from a sandbox with no route to the API, so the log carries them
+      # The parser depends on these field names and they cannot be checked from
+      # a sandbox with no route to the API, so the log carries them. Diagnostic
+      # only: it has no retries of its own, so a blip here must not fail the job
+      # and cost a day the render step would have recovered.
       - name: Probe the API contract
+        continue-on-error: true
         run: python scripts/sky.py --probe
 
       - run: python scripts/sky.py

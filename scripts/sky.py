@@ -14,6 +14,7 @@ import os
 import random
 import re
 import sys
+import time
 import urllib.request
 
 PLACE = "Amsterdam"
@@ -24,8 +25,9 @@ RAMP = " ░▒▓█"
 JITTER = 0.55  # speckle at level boundaries
 GRAIN_SMEARED, GRAIN_CLUMPED = 2.0, 9.0  # horizontal features across the width
 HARD_SMEARED, HARD_CLUMPED = 2.2, 5.0
-FALLBACK = (0.70, 0.55)  # a plausible Dutch sky, not an error state
 README = "README.md"
+ATTEMPTS = 3
+BACKOFF = 5  # seconds, multiplied by the attempt number
 
 API = (
     "https://api.open-meteo.com/v1/forecast?latitude={}&longitude={}"
@@ -89,17 +91,27 @@ def raw():
 
 
 def fetch():
-    """Returns (coverage, convective, live). Falls back to a plausible sky."""
-    try:
-        current = raw()["current"]
-        total = current["cloud_cover"] / 100
-        low = current["cloud_cover_low"] / 100
-        return total, (low / total if total > 0.02 else 0.0), True
-    except Exception as exc:
-        # Deliberately not fatal: a failed run should leave a plausible strip
-        # rather than an empty README. Loud in the log so it is not silent.
-        print(f"open-meteo unavailable ({exc.__class__.__name__}: {exc}); using fallback", file=sys.stderr)
-        return FALLBACK[0], FALLBACK[1], False
+    """Returns (coverage, convective), or None once the retries are spent.
+
+    There is deliberately no fabricated fallback. Inventing a plausible sky
+    publishes a confident claim that happens to be false, and dates it today,
+    which is worse than showing yesterday's real one.
+    """
+    for attempt in range(1, ATTEMPTS + 1):
+        try:
+            current = raw()["current"]
+            total = current["cloud_cover"] / 100
+            low = current["cloud_cover_low"] / 100
+            return total, (low / total if total > 0.02 else 0.0)
+        except Exception as exc:
+            print(
+                f"attempt {attempt}/{ATTEMPTS} failed ({exc.__class__.__name__}: {exc})",
+                file=sys.stderr,
+            )
+            if attempt < ATTEMPTS:
+                time.sleep(BACKOFF * attempt)
+
+    return None
 
 
 def label(coverage, convective):
@@ -149,7 +161,14 @@ def main():
         print(json.dumps(raw(), indent=2))
         return 0
 
-    coverage, convective, live = fetch()
+    sky = fetch()
+    if sky is None:
+        # Leave the committed strip alone and fail the run. A red job mails the
+        # owner, which is the only signal that the strip has stopped moving.
+        print(f"open-meteo unreachable after {ATTEMPTS} attempts; nothing rendered", file=sys.stderr)
+        return 1
+
+    coverage, convective = sky
     today = datetime.date.today()
     block = render(coverage, convective, today)
 
@@ -173,8 +192,7 @@ def main():
     with open(README, "w", encoding="utf-8") as f:
         f.write(updated)
 
-    source = "live" if live else "fallback"
-    print(f"{source}: {footer(coverage, convective, today)}")
+    print(footer(coverage, convective, today))
     print(block)
     return 0
 
