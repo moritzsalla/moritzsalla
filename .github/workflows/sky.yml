@@ -1,0 +1,37 @@
+name: sky
+
+on:
+  schedule:
+    - cron: "0 7 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  render:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+
+      # the parser depends on these field names and they cannot be checked
+      # from a sandbox with no route to the API, so the log carries them
+      - name: Probe the API contract
+        run: python scripts/sky.py --probe
+
+      - run: python scripts/sky.py
+
+      - name: Commit if changed
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git diff --quiet README.md || {
+            git add README.md
+            git commit -m "sky: $(date -u +%Y-%m-%d)"
+            git push
+          }

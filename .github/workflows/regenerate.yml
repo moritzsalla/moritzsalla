@@ -1,8 +1,9 @@
 name: Regenerate
 
+# Manual only. sky.yml now owns README.md on a daily schedule, and two
+# generators writing the same fence would overwrite each other. Restore the
+# schedule line to hand it back.
 on:
-  schedule:
-    - cron: "0 9 * * 1"
   workflow_dispatch:
 
 jobs:
