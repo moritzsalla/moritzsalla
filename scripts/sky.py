@@ -16,8 +16,10 @@ import re
 import sys
 import urllib.request
 
-LAT, LON = 52.3676, 4.9041  # Amsterdam
-COLS, ROWS = 64, 3
+PLACE = "Amsterdam"
+LAT, LON = 52.3676, 4.9041
+COLS, ROWS = 100, 3
+TUNED_COLS = 64  # the width GRAIN_* were tuned against
 RAMP = " ░▒▓█"
 JITTER = 0.55  # speckle at level boundaries
 GRAIN_SMEARED, GRAIN_CLUMPED = 2.0, 9.0  # horizontal features across the width
@@ -62,7 +64,10 @@ def noise(seed, w, h, fx, fy, octaves=3, falloff=0.42):
 
 def strip(coverage, convective, seed):
     """convective 0..1 - share of cloud that is low/cumuliform."""
-    grain = lerp(GRAIN_SMEARED, GRAIN_CLUMPED, convective)
+    # grain counts features across the width, so holding it fixed while the
+    # strip widens just stretches every clump. Scaling it keeps them the size
+    # they were tuned to be and puts more of them on screen instead.
+    grain = lerp(GRAIN_SMEARED, GRAIN_CLUMPED, convective) * (COLS / TUNED_COLS)
     hard = lerp(HARD_SMEARED, HARD_CLUMPED, convective)
     n = noise(seed, COLS, ROWS, grain, 1.6)
     flat = sorted(v for row in n for v in row)
@@ -101,29 +106,41 @@ def label(coverage, convective):
     cov = (
         "clear"
         if coverage < 0.15
-        else "few"
+        else "few clouds"
         if coverage < 0.35
-        else "scattered"
+        else "scattered cloud"
         if coverage < 0.60
-        else "broken"
+        else "broken cloud"
         if coverage < 0.88
         else "overcast"
     )
-    return f"{cov} · {'cumuliform' if convective > .5 else 'stratiform'}"
+    form = "cumuliform" if convective > 0.5 else "stratiform"
+    # under a nearly empty sky the cloud form describes almost nothing, so
+    # naming it reads as precision the figure does not have
+    return cov if coverage < 0.15 else f"{cov}, {form}"
 
 
-# the fence, and the footer if one is still there - it has been deleted by
-# hand before, and a pattern that requires it silently matches nothing
-BLOCK = re.compile(r"```\n.*?\n```(?:\n+Generated: \[[^\n]*)?", re.DOTALL)
+def footer(coverage, convective, today):
+    day = f"{today:%d}".lstrip("0")
+    return (
+        f"{PLACE}, {day} {today:%b %Y}. "
+        f"{label(coverage, convective).capitalize()} with {round(coverage * 100)}% cover."
+    )
+
+
+# The fence, and the footer if one is still there - it has been deleted by
+# hand before, and a pattern that requires it silently matches nothing. Both
+# footer forms are matched: the "Generated: [" one is what is committed today
+# and has to be consumed on the changeover rather than left stranded.
+BLOCK = re.compile(
+    r"```\n.*?\n```(?:\n+(?:Generated: \[|" + re.escape(PLACE) + r", )[^\n]*)?",
+    re.DOTALL,
+)
 
 
 def render(coverage, convective, today):
     art = strip(coverage, convective, seed=today.toordinal())
-    footer = (
-        f"Generated: [{today:%d %b %Y}] • Amsterdam • "
-        f"{label(coverage, convective)} • {round(coverage * 100)}% cover"
-    )
-    return "```\n" + art + "\n```\n\n" + footer
+    return "```\n" + art + "\n```\n\n" + footer(coverage, convective, today)
 
 
 def main():
@@ -157,7 +174,7 @@ def main():
         f.write(updated)
 
     source = "live" if live else "fallback"
-    print(f"{source}: {label(coverage, convective)}, {round(coverage * 100)}% cover")
+    print(f"{source}: {footer(coverage, convective, today)}")
     print(block)
     return 0
 
